@@ -64,6 +64,22 @@ services:
       - /:/rootfs:ro
       - /:/host:ro,rslave
 
+  db:
+    image: mariadb:10.11
+    container_name: mariadb-database
+    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
+    networks:
+      - internal
+    volumes:
+      - /var/lib/mysql:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+      - MYSQL_DATABASE
+    restart: unless-stopped
+
+
   prometheus:
     container_name: monitoring-prometheus
     image: prom/prometheus:latest
@@ -90,6 +106,18 @@ services:
     links:
       - cadvisor:cadvisor
       - node-exporter:node-exporter
+
+### OpenIA WebUI 
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    environment:
+      - OPENAI_API_KEY=your_secret_key
+    ports:
+      - "3000:8080"
+    volumes:
+      - open-webui:/app/backend/data
+    restart: always
 
 networks:
   internal:
