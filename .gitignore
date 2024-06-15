@@ -5,3 +5,4 @@ app/
 
 prometheus/data/
 grafana/data/
+redis/data/dump.rdb

@@ -41,6 +41,33 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
       - /etc/machine-id:/etc/machine-id:ro
+    depends_on:
+      - redis
+  
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: unless-stopped
+    networks:
+      - internal
+    ports:
+      - 6379:6379
+    volumes:
+      - ./redis/data:/data
+
+  postgres:
+    container_name: postgres
+    image: postgres:latest
+    hostname: rpi-postgres
+    restart: unless-stopped
+    networks:
+      - internal
+    env_file:
+      - ./postgres.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data
 
   node-exporter:
     container_name: monitoring-node-exporter
@@ -62,22 +89,6 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
       - /:/host:ro,rslave
-
-  # db:
-  #   image: mariadb:10.11
-  #   container_name: mariadb-database
-  #   command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
-  #   networks:
-  #     - internal
-  #   volumes:
-  #     - /var/lib/mysql:/var/lib/mysql
-  #   environment:
-  #     - MYSQL_ROOT_PASSWORD
-  #     - MYSQL_USER
-  #     - MYSQL_PASSWORD
-  #     - MYSQL_DATABASE
-  #   restart: unless-stopped
-
 
   prometheus:
     container_name: monitoring-prometheus

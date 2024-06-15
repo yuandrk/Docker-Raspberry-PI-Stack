@@ -1,4 +1,4 @@
-# Raspberry Pi & Docker Monitoring
+# Raspberry Pi, WebUI-ChatGPT & Docker Monitoring
 
 ## Hit the Star! :star:
 
@@ -39,6 +39,8 @@ cd Docker-Raspberry-PI-Monitoring
 ```bash
 mkdir -p prometheus/data grafana/data && \
 mkdir -p app/backend/data && \
+mkdir -p redis/data && \
+mkdir -p postgres/data && \
 sudo chown -R 472:472 grafana/ && \
 sudo chown -R 65534:65534 prometheus/
 ```
