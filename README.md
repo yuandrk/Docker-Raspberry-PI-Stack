@@ -38,6 +38,7 @@ cd Docker-Raspberry-PI-Monitoring
  - Create `data` directory and change the ownership of the `prometheus` and `grafana` folders for a nice and clean installation.
 ```bash
 mkdir -p prometheus/data grafana/data && \
+mkdir -p app/backend/data && \
 sudo chown -R 472:472 grafana/ && \
 sudo chown -R 65534:65534 prometheus/
 ```
