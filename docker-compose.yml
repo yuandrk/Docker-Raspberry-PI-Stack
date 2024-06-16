@@ -1,9 +1,8 @@
 
 services:
 
-
   caddy:
-    image: lucaslorentz/caddy-docker-proxy:ci-alpine
+    image: caddy:2.8-alpine
     container_name: caddy
     restart: unless-stopped
     environment:
@@ -15,7 +14,9 @@ services:
       - internal
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./Caddyfile:/etc/caddy/Caddyfile
       - ./caddy/data:/data
+      - ./caddy/config:/config
     depends_on:
       - grafana
     
@@ -32,10 +33,6 @@ services:
       - "3000:3000"
     env_file:
       - ./grafana/.env
-    labels:
-      caddy: grafana.yuandrk.net
-      caddy.reverse_proxy: "grafana:3000"
-      caddy.header: /*
     volumes:
       # /!\ To be modified depending on your needs /!\
       - ./grafana/data:/var/lib/grafana
@@ -147,13 +144,11 @@ services:
     image: ghcr.io/open-webui/open-webui:main
     container_name: chatgpt
     environment:
-      - OPENAI_API_KEY=your_secret_key
+      - OPENAI_API_KEY=secrets
     ports:
-      - "9000:8080"
-    labels:
-      caddy: chatgpt.yuandrk.net
-      caddy.reverse_proxy: "chatgpt:9000"
-      caddy.header: /*
+      - "8080:8080"
+    networks:
+      - internal
     volumes:
       - /app/backend/data:/app/backend/data
     restart: always
