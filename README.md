@@ -1,4 +1,4 @@
-# Raspberry Pi & Docker Monitoring
+# Raspberry Pi, WebUI-ChatGPT & Docker Monitoring
 
 ## Hit the Star! :star:
 
@@ -9,10 +9,14 @@ If you find this repository useful, please consider giving it a star. Your suppo
 Introducing the Raspberry Pi monitoring solution using Grafana, Prometheus, Cadvisor, and Node-Exporter Stack! This project aims to provide a comprehensive and user-friendly way to monitor the performance of your Raspberry Pi. With Grafana's intuitive dashboards, you can easily visualize system metrics collected by Prometheus and Cadvisor, while Node-Exporter provides valuable information about the Raspberry Pi's hardware and operating system. The combination of these tools results in a powerful and efficient monitoring solution that will give you complete visibility into your system's health. Check out the project and take your Raspberry Pi monitoring to the next level !
 
 This repository contains a `docker-compose` file to run a Raspberry PI monitoring stack. It is based on the following projects:
-- [Prometheus](https://prometheus.io/)
+- [OpenWeb](https://openwebui.com/)
 - [Grafana](http://grafana.org/)
+- [Caddy](https://caddyserver.com/)
 - [cAdvisor](https://github.com/google/cadvisor)
 - [NodeExporter](https://github.com/prometheus/node_exporter)
+- [Prometheus](https://prometheus.io/)
+- [Postgres](https://www.postgresql.org/)
+
 
 ## Prerequisites
 
@@ -35,14 +39,37 @@ git clone https://github.com/oijkn/Docker-Raspberry-PI-Monitoring.git
 cd Docker-Raspberry-PI-Monitoring
 ```
 
+[] make scripts for create directory 
  - Create `data` directory and change the ownership of the `prometheus` and `grafana` folders for a nice and clean installation.
 ```bash
 mkdir -p prometheus/data grafana/data && \
+mkdir -p app/backend/data && \
+mkdir -p redis/data && \
+mkdir -p caddy/data && \
+mkdir -p postgres/data && \
 sudo chown -R 472:472 grafana/ && \
 sudo chown -R 65534:65534 prometheus/
 ```
+- Change a proxy configuration in Caddy file 
+```bash
+# Grafana Proxy Configuration
+grafana.domain.name {
+    header /* {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "no-referrer-when-downgrade"
+    }
+    reverse_proxy grafana:3000
+}
 
- - Start the stack with `docker-compose`.
+# ChatGPT Proxy Configuration
+grafana.domain.name {
+    reverse_proxy chatgpt:8080
+}
+
+```
+- Start the stack with `docker-compose`.
 ```bash
 docker-compose up -d
 ```
@@ -53,16 +80,7 @@ This will start all the containers and make them available on the host machine.
 - 9090: Prometheus
 - 8080: cAdvisor
 - 9100: NodeExporter
-
-The Grafana dashboard can be accessed by navigating to `http://<host-ip>:3000` in your browser for example `http://192.168.1.100:3000`.
-<br/>The default username and password are both `admin`. You will be prompted to change the password on the first login.
-<br/>Credentials can be changed by editing the [.env](grafana/.env) file.
-
-If you would like to change which targets should be monitored, you can edit the [prometheus.yml](prometheus/prometheus.yml) file.
-<br/>The targets section contains a list of all the targets that should be monitored by Prometheus.
-<br/>The names defined in the `job_name` section are used to identify the targets in Grafana.
-<br/>The `static_configs` section contains the IP addresses of the targets that should be monitored. Actually, they are sourced from the service names defined in the [docker-compose.yml](docker-compose.yml) file.
-<br/>If you think that the `scrape_interval` value is too aggressive, you can change it to a more suitable value.
+- 8080: OpenWeb
 
 In order to check if the stack is running correctly, you can run the following command:
 ```bash

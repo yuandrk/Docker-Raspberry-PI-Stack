@@ -1,5 +1,26 @@
-version: "3"
+
 services:
+
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: caddy
+    restart: unless-stopped
+    environment:
+      - CADDY_INGRESS_NETWORKS=internal
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - internal
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy/data:/data
+      - ./caddy/config:/config
+    depends_on:
+      - grafana
+    
+
   grafana:
     container_name: monitoring-grafana
     image: grafana/grafana:latest
@@ -42,6 +63,33 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
       - /etc/machine-id:/etc/machine-id:ro
+    depends_on:
+      - redis
+  
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: unless-stopped
+    networks:
+      - internal
+    ports:
+      - 6379:6379
+    volumes:
+      - ./redis/data:/data
+
+  postgres:
+    container_name: postgres
+    image: postgres:latest
+    hostname: rpi-postgres
+    restart: unless-stopped
+    networks:
+      - internal
+    env_file:
+      - ./postgres.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data
 
   node-exporter:
     container_name: monitoring-node-exporter
@@ -90,6 +138,20 @@ services:
     links:
       - cadvisor:cadvisor
       - node-exporter:node-exporter
+
+## OpenIA WebUI 
+  chatgpt:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: chatgpt
+    environment:
+      - OPENAI_API_KEY=secrets
+    ports:
+      - "8080:8080"
+    networks:
+      - internal
+    volumes:
+      - /app/backend/data:/app/backend/data
+    restart: always
 
 networks:
   internal:

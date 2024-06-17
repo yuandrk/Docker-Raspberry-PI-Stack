@@ -1,0 +1,15 @@
+# Grafana Proxy Configuration
+grafana.yuandrk.net {
+    header /* {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "no-referrer-when-downgrade"
+    }
+    reverse_proxy grafana:3000
+}
+
+# ChatGPT Proxy Configuration
+ia.yuandrk.net {
+    reverse_proxy chatgpt:8080
+}
