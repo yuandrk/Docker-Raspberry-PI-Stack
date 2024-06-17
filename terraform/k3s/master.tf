@@ -1,5 +1,4 @@
 resource "null_resource" "master" {
-  count = var.master_count
 
   provisioner "remote-exec" {
     inline = [
@@ -8,9 +7,10 @@ resource "null_resource" "master" {
 
     connection {
       type        = "ssh"
-      user        = "ubuntu"
-      private_key = file("~/.ssh/id_rsa")
-      host        = "your-master-node-ip"
+      user        = var.user
+      port        = 1580
+      private_key = file("./k3s/keys/kub")
+      host        = var.master_host
     }
   }
 }

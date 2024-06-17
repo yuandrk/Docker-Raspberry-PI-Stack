@@ -6,3 +6,12 @@ app/
 prometheus/data/
 grafana/data/
 redis/data/dump.rdb
+terraform/k3s/keys/kub
+
+terraform/.terraform/
+terraform/terraform.tfstate
+terraform/.terraform.lock.hcl
+terraform/k3s/keys/yuandrk_rass
+terraform/k3s/.terraform/providers/registry.terraform.io/hashicorp/null/3.2.2/linux_arm64/terraform-provider-null_v3.2.2_x5
+terraform/k3s/.terraform.lock.hcl
+terraform/terraform.tfstate.backup
