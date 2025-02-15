@@ -6,3 +6,8 @@ app/
 prometheus/data/
 grafana/data/
 redis/data/dump.rdb
+
+# Ignore directories with permission issues
+postgres/data/
+caddy/config/caddy/
+caddy/data/caddy/
