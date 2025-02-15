@@ -1,6 +1,5 @@
 
 services:
-
   caddy:
     image: caddy:2.8-alpine
     container_name: caddy
@@ -20,7 +19,6 @@ services:
     depends_on:
       - grafana
     
-
   grafana:
     container_name: monitoring-grafana
     image: grafana/grafana:latest
@@ -30,7 +28,7 @@ services:
     networks:
       - internal
     ports:
-      - "3000:3000"
+      - "3030:3030"
     env_file:
       - ./grafana/.env
     volumes:
@@ -140,19 +138,59 @@ services:
       - node-exporter:node-exporter
 
 ## OpenIA WebUI 
-  chatgpt:
-    image: ghcr.io/open-webui/open-webui:main
-    container_name: chatgpt
-    environment:
-      - OPENAI_API_KEY=secrets
+  ollama:
+    volumes:
+      - ollama:/root/.ollama
+    container_name: ollama
+    pull_policy: always
+    tty: true
+    restart: unless-stopped
+    image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
+    networks:
+    - internal
+
+  open-webui:
+    build:
+      context: .
+      args:
+        OLLAMA_BASE_URL: '/ollama'
+      dockerfile: Dockerfile
+    image: ghcr.io/open-webui/open-webui:${WEBUI_DOCKER_TAG-main}
+    container_name: open-webui
+    volumes:
+      - open-webui:/app/backend/data
+    depends_on:
+      - ollama
     ports:
-      - "8080:8080"
+      - "3000:8080"
+    environment:
+      - 'OLLAMA_BASE_URL=http://ollama:11434'
+      - 'WEBUI_SECRET_KEY='
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    restart: unless-stopped
     networks:
       - internal
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: n8n
+    restart: unless-stopped
+    environment:
+      - N8N_HOST=n8n.yuandrk.net
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - NODE_ENV=production
+      - WEBHOOK_URL=https://n8n.yuandrk.net/
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
     volumes:
-      - /app/backend/data:/app/backend/data
-    restart: always
-
+      - n8n_data:/home/node/.n8n
+    networks:
+      - internal
+volumes:
+  ollama: {}
+  open-webui: {}
+  n8n_data: {}
+  
 networks:
   internal:
     driver: bridge

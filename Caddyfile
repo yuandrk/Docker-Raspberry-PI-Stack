@@ -6,10 +6,15 @@ grafana.yuandrk.net {
         X-Frame-Options "DENY"
         Referrer-Policy "no-referrer-when-downgrade"
     }
-    reverse_proxy grafana:3000
+    reverse_proxy grafana:3030
 }
 
-# ChatGPT Proxy Configuration
+# ChatGPT (Open WebUI) Proxy Configuration
 ia.yuandrk.net {
-    reverse_proxy chatgpt:8080
+    reverse_proxy open-webui:8080
+}
+
+# n8n Proxy Configuration
+n8n.yuandrk.net {
+    reverse_proxy n8n:5678
 }
