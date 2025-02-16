@@ -1,4 +1,4 @@
-# Raspberry Pi, WebUI-ChatGPT & Docker Monitoring
+# Raspberry Pi Monitoring Stack with AI Tools
 
 ## Hit the Star! :star:
 
@@ -6,125 +6,156 @@ If you find this repository useful, please consider giving it a star. Your suppo
 
 ## Introduction
 
-Introducing the Raspberry Pi monitoring solution using Grafana, Prometheus, Cadvisor, and Node-Exporter Stack! This project aims to provide a comprehensive and user-friendly way to monitor the performance of your Raspberry Pi. With Grafana's intuitive dashboards, you can easily visualize system metrics collected by Prometheus and Cadvisor, while Node-Exporter provides valuable information about the Raspberry Pi's hardware and operating system. The combination of these tools results in a powerful and efficient monitoring solution that will give you complete visibility into your system's health. Check out the project and take your Raspberry Pi monitoring to the next level !
+This repository provides a comprehensive Docker stack for Raspberry Pi that combines powerful monitoring tools with modern AI capabilities. The stack includes monitoring solutions using Grafana, Prometheus, Cadvisor, and Node-Exporter, as well as AI tools like Ollama and Open WebUI for local AI interactions, and n8n for workflow automation.
 
-This repository contains a `docker-compose` file to run a Raspberry PI monitoring stack. It is based on the following projects:
-- [OpenWeb](https://openwebui.com/)
-- [Grafana](http://grafana.org/)
-- [Caddy](https://caddyserver.com/)
-- [cAdvisor](https://github.com/google/cadvisor)
-- [NodeExporter](https://github.com/prometheus/node_exporter)
-- [Prometheus](https://prometheus.io/)
-- [Postgres](https://www.postgresql.org/)
-
+This stack is based on the following components:
+- [Grafana](http://grafana.org/) - Visualization and analytics
+- [Prometheus](https://prometheus.io/) - Metrics collection and storage
+- [cAdvisor](https://github.com/google/cadvisor) - Container metrics
+- [NodeExporter](https://github.com/prometheus/node_exporter) - Hardware and OS metrics
+- [Caddy](https://caddyserver.com/) - Reverse proxy with automatic HTTPS
+- [Ollama](https://ollama.ai/) - Local AI model running
+- [Open WebUI](https://openwebui.com/) - Web interface for AI interactions
+- [n8n](https://n8n.io/) - Workflow automation
 
 ## Prerequisites
 
-Before we get started installing the stack, we need to make sure that the following prerequisites are met:
-- Docker is installed on the host machine
-- Docker Compose is installed on the host machine
-- The host machine is running a Raspberry PI OS or any other compatible Linux distribution
+Before installing the stack, ensure you have:
+- Docker installed
+- Docker Compose installed
+- A Raspberry Pi running Raspberry Pi OS or compatible Linux distribution
 
 ## Installation and Configuration
 
-To install the stack, follow the steps below:
-
-- Clone this repository to your host machine.
+1. Clone this repository:
 ```bash
-git clone https://github.com/oijkn/Docker-Raspberry-PI-Monitoring.git
+git clone https://github.com/oijkn/Docker-Raspberry-PI-Stack.git
 ```
 
-- Enter to the cloned directory.
+2. Create required directories for configuration files:
 ```bash
-cd Docker-Raspberry-PI-Monitoring
-```
-
-[] make scripts for create directory 
- - Create `data` directory and change the ownership of the `prometheus` and `grafana` folders for a nice and clean installation.
-```bash
-mkdir -p prometheus/data grafana/data && \
-mkdir -p app/backend/data && \
-mkdir -p redis/data && \
-mkdir -p caddy/data && \
-mkdir -p postgres/data && \
+mkdir -p grafana/provisioning && \
+mkdir -p prometheus && \
 sudo chown -R 472:472 grafana/ && \
 sudo chown -R 65534:65534 prometheus/
 ```
-- Change a proxy configuration in Caddy file 
+
+Note: All data directories are now managed through Docker named volumes, which provides better isolation and portability. The volumes will be automatically created when you start the stack.
+
+3. Configure environment variables:
+Copy the example `.env` file and adjust it to your needs:
 ```bash
-# Grafana Proxy Configuration
-grafana.domain.name {
-    header /* {
-        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-        X-Content-Type-Options "nosniff"
-        X-Frame-Options "DENY"
-        Referrer-Policy "no-referrer-when-downgrade"
-    }
-    reverse_proxy grafana:3000
-}
-
-# ChatGPT Proxy Configuration
-grafana.domain.name {
-    reverse_proxy chatgpt:8080
-}
-
+cp .env.example .env
 ```
-- Start the stack with `docker-compose`.
+
+The `.env` file contains the following configurations:
+
+- **Timezone Configuration**
+  - `GENERIC_TIMEZONE`: Set your timezone (default: UTC)
+
+- **Ollama Configuration**
+  - `OLLAMA_DOCKER_TAG`: Ollama Docker image tag (default: latest)
+
+- **Open WebUI Configuration**
+  - `WEBUI_DOCKER_TAG`: WebUI Docker image tag (default: main)
+  - `WEBUI_SECRET_KEY`: Secret key for WebUI security
+
+- **Grafana Configuration**
+  - `GF_SECURITY_ADMIN_USER`: Admin username (default: admin)
+  - `GF_SECURITY_ADMIN_PASSWORD`: Admin password (default: admin)
+  - `GF_SERVER_HTTP_PORT`: Grafana port (default: 3030)
+  - `GF_INSTALL_PLUGINS`: Pre-installed Grafana plugins
+
+- **n8n Configuration**
+  - `N8N_HOST`: Your n8n domain
+  - `N8N_PORT`: n8n port (default: 5678)
+  - `N8N_PROTOCOL`: Protocol (http/https)
+  - `NODE_ENV`: Environment (production/development)
+  - `WEBHOOK_URL`: Your n8n webhook URL
+
+- **Prometheus Configuration**
+  - `PROMETHEUS_RETENTION_TIME`: Data retention period (default: 1y)
+  - `PROMETHEUS_RETENTION_SIZE`: Optional storage size limit
+
+4. Start the stack:
 ```bash
 docker-compose up -d
 ```
 
-This will start all the containers and make them available on the host machine.
-<br/>The following ports are used (only Grafana is exposed on the host machine):
-- 3000: Grafana
-- 9090: Prometheus
-- 8080: cAdvisor
-- 9100: NodeExporter
-- 8080: OpenWeb
+## Data Persistence
 
-In order to check if the stack is running correctly, you can run the following command:
-```bash
-docker-compose ps
-```
+The stack uses Docker named volumes for data persistence:
+- `caddy_data` and `caddy_config`: Caddy certificates and configuration
+- `grafana_data`: Grafana databases and settings
+- `prometheus_data`: Prometheus time series data
+- `ollama_data`: Ollama models and configuration
+- `webui_data`: Open WebUI settings and data
+- `n8n_data`: n8n workflows and data
 
-View the logs of a specific container by running the following command:
-```bash
-docker logs -f <container-name>
-```
+These volumes are automatically created and managed by Docker, ensuring data persistence across container restarts and updates.
 
-## Add Data Sources and Dashboards
+## Available Services
 
-Since Grafana v5 has introduced the concept of provisioning, it is possible to automatically add data sources and dashboards to Grafana.
-<br/>This is done by placing the `datasources` and `dashboards` directories in the [provisioning](grafana/provisioning) folder. The files in these directories are automatically loaded by Grafana on startup.
+The stack exposes the following services:
+- Grafana: Port 3030
+- Open WebUI: Port 3000
+- n8n: Port 5678 (accessed via Caddy)
+- Caddy: Ports 80 and 443 for HTTPS
 
-If you like to add a new dashboard, simply place the JSON file in the [dashboards](grafana/provisioning/dashboards) directory, and it will be automatically loaded next time Grafana is started.
+Internal services (not directly exposed):
+- Prometheus: Port 9090
+- cAdvisor: Port 8080
+- Node Exporter: Port 9100
+- Ollama: Port 11434
 
-# Install Dashboard from Grafana.com (Optional)
+## Monitoring Configuration
 
-If you would like to install this dashboard from Grafana.com, simply follow the steps below:
-- Navigate to the dashboard on [Grafana.com Dashboard](https://grafana.com/grafana/dashboards/15120-raspberry-pi-docker-monitoring/)
-- Click on the `Copy ID to Clipboard` button
-- Navigate to the `Import` page in Grafana
-- Paste the ID into the `Import via grafana.com` field
-- Click on the `Load` button
-- Click on the `Import` button
+### Grafana
 
-Or you can follow the steps described in the [Grafana Documentation](https://grafana.com/docs/grafana/latest/dashboards/manage-dashboards/#import-a-dashboard).
+Grafana is preconfigured with:
+- Data sources provisioning in `grafana/provisioning/datasources`
+- Dashboards provisioning in `grafana/provisioning/dashboards`
+- Persistent storage in Docker volume
 
-This dashboard is intended to help you get started with monitoring your Raspberry PI devices. If you have any changes or suggestions, you would like to see, please feel free to open an issue or create a pull request.
+### Prometheus
 
-Here is a screenshot of the dashboard:
-![Grafana Dashboard](grafana/screenshots/dashboard.png)
+Prometheus is configured with:
+- Long-term metrics storage (1 year retention)
+- Configurable storage size limit
+- Scraping configuration for all monitoring services
 
-## License
+### AI Tools
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+#### Ollama
+- Runs local AI models
+- Persistent storage in Docker volume
+- Accessible via Open WebUI
+
+#### Open WebUI
+- Provides web interface for AI interactions
+- Connects to Ollama service
+- Custom configuration via environment variables
+
+### Workflow Automation
+
+#### n8n
+- Accessible via HTTPS through Caddy
+- Persistent workflow storage
+- Timezone configurable via environment variables
+
+## Network Configuration
+
+All services run on an internal Docker network for security, with Caddy handling external access and HTTPS termination.
 
 ## Troubleshooting
 
-Enable `c-group` memory and swap accounting on the host machine by running the following command:
+If you encounter issues with container metrics, enable cgroup on your Raspberry Pi:
 ```bash
 sudo sed -i 's/^GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1 swapaccount=1"/' /etc/default/grub
 sudo update-grub
 sudo reboot
 ```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
